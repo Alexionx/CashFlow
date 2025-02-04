@@ -2,5 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.register),
+    path('register/', views.register, name='register'),
+    path('profile/', views.profile, name='profile'),
+    path('createPlan/', views.createPlan, name='createPlan'),
+    path('currentBudget/', views.currentBudget, name='currentBudget'),
+    path('costs/', views.costs, name='costs'),
+    path('chart/', views.chart, name='chart'),
+    path('analytics/', views.analytics, name='analytics'),
+    path('budgetBalanceEstimate/', views.budgetBalanceEstimate, name='budgetBalanceEstimate'),
+    path('readyMadeTemplates/', views.readyMadeTemplates, name='readyMadeTemplates'),
 ]

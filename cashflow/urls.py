@@ -22,5 +22,5 @@ from cashflow import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('admin/', admin.site.urls),
-    path('register', include('main.urls')),
+    path('', include('main.urls')),   
 ]
