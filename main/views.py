@@ -3,7 +3,7 @@ from django.http import HttpResponse
 # Create your views here.
 
 def register(request):
-    return HttpResponse('<h4>Перевірка "Зареєструватися"</h4>')
+    return render(request, 'registration.html')
 
 def profile(request):
     return HttpResponse('<h4>Перевірка "Профіль"</h4>')
