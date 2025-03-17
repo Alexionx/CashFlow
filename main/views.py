@@ -6,7 +6,7 @@ def register(request):
     return render(request, 'registration.html')
 
 def profile(request):
-    return HttpResponse('<h4>Перевірка "Профіль"</h4>')
+    return render(request, 'profile.html')
 
 def createPlan(request):
     return HttpResponse('<h4>Перевірка "Створення плану"</h4>')
