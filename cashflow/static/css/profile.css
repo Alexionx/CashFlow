@@ -1,0 +1,37 @@
+
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+
+.information {
+    flex: 1;
+    max-width: 500px;
+    padding-left: 180px;
+}
+
+.photo_edit {
+    display: flex;
+    align-items: center; /* Вирівнює елементи по центру вертикально */
+    gap: 15px; /* Відступ між фото та текстом */
+}
+
+.photo_edit img {
+    width: 100px; /* Розмір зображення */
+    height: 100px;
+}
+
+.cards {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 100px;
+    max-width: 500px;
+}
