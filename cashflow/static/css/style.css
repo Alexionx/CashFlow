@@ -9,11 +9,10 @@ h1 {
     color: #333;
 }
 html, body {
-    height: 100%;
-    margin: 0;
+        height: 100%;
+        margin: 0;
   }
   
-  
-  .footer {
+.footer {
     margin-top: auto;
   }
