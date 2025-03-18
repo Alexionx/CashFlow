@@ -120,7 +120,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "cashflow/static"  # Вказуємо шлях до статичних файлів
+    BASE_DIR / "cashflow/static"  # path to static files
 ]
 
 # Default primary key field type
