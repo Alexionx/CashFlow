@@ -9,22 +9,19 @@ def profile(request):
     return render(request, 'profile.html')
 
 def createPlan(request):
-    return HttpResponse('<h4>Перевірка "Створення плану"</h4>')
+    return render(request, 'createPlan.html')
 
-def currentBudget(request):
-    return HttpResponse('<h4>Перевірка "Поточний бюджет"</h4>')
+def chart(request):
+    return render(request, 'chart.html')
 
 def costs(request):
     return HttpResponse('<h4>Перевірка "Оцінка витрат"</h4>')
 
-def chart(request):
-    return HttpResponse('<h4>Перевірка "Кругова діаграма"</h4>')
-
 def analytics(request):
     return HttpResponse('<h4>Перевірка "Аналітика перевиконання бюджету"</h4>')
 
-def budgetBalanceEstimate(request):
-    return HttpResponse('<h4>Перевірка "Оцінка залишку бюджету на кінець місяця"</h4>')
+def createBudget(request):
+    return render(request, 'createBudget.html')
 
 def readyMadeTemplates(request):
-    return HttpResponse('<h4>Перевірка "Готові шаблони"</h4>')
+    return render(request, 'readyTemplates.html')

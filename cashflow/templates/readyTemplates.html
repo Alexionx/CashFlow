@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Готові шаблони бюджетів</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Твій власний CSS (якщо є) -->
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="bg-light">
+
+  {% include 'partials/header.html' %}
+
+  <div class="container py-5">
+    <h2 class="text-center mb-4">Готові шаблони бюджетування</h2>
+    
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+      <!-- Картка 1 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-primary">
+          <div class="card-body">
+            <h5 class="card-title text-primary">50/30/20</h5>
+            <p class="card-text">50% – необхідні витрати (житло, їжа),<br>30% – бажання,<br>20% – заощадження.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Картка 2 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-success">
+          <div class="card-body">
+            <h5 class="card-title text-success">Zero-based бюджет</h5>
+            <p class="card-text">Кожна гривня має завдання: доходи мінус витрати = 0. Ідеально для повного контролю.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Картка 3 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-warning">
+          <div class="card-body">
+            <h5 class="card-title text-warning">70/20/10</h5>
+            <p class="card-text">70% – витрати,<br>20% – заощадження,<br>10% – благодійність або розвиток.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Картка 4 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-danger">
+          <div class="card-body">
+            <h5 class="card-title text-danger">Envelope метод</h5>
+            <p class="card-text">Гроші поділено по «конвертах» для кожної категорії. Витрати лише в межах обраного.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Картка 5 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-info">
+          <div class="card-body">
+            <h5 class="card-title text-info">Інвест-бюджет</h5>
+            <p class="card-text">30% – інвестиції,<br>30% – життя,<br>30% – резерв,<br>10% – навички й освіта.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Картка 6 -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-secondary">
+          <div class="card-body">
+            <h5 class="card-title text-secondary">Мінімаліст</h5>
+            <p class="card-text">Максимум 40% – витрати, решта — накопичення. Мінімум речей — максимум ефекту 💡</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {% include 'partials/footer.html' %}
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
