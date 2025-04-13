@@ -1,16 +1,19 @@
 from django.shortcuts import render, redirect
 from .forms import UserRegistrationForm
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate
+from django.contrib import messages
 
 # Функція для реєстрації
 def register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save()  # Зберігає користувача в базу даних
-            login(request, user)  # Авторизує користувача після реєстрації
+            # Отримуємо дані форми
+            user = form.save(commit=False)  # Не зберігаємо ще користувача
+            user.set_password(form.cleaned_data['password'])  # Хешуємо пароль
+            user.save()  # Зберігаємо користувача з хешованим паролем
+            login(request, user)  # Авторизуємо користувача після реєстрації
             return redirect('home')  # Перенаправлення на сторінку профілю
     else:
         form = UserRegistrationForm()
@@ -21,10 +24,15 @@ def register(request):
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
+
         if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('home')  # Перенаправлення на сторінку профілю після входу
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+
+            if user is not None:
+                login(request, user)
+                return redirect('home')  # редірект на домашню сторінку після входу
     else:
         form = AuthenticationForm()
 

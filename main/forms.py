@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     password_confirmation = forms.CharField(widget=forms.PasswordInput)
+    terms = forms.BooleanField(required=False, label='Я погоджуюсь з умовами використання')
 
     class Meta:
         model = User
@@ -14,17 +15,23 @@ class UserRegistrationForm(forms.ModelForm):
         password_confirmation = self.cleaned_data.get('password_confirmation')
 
         if password != password_confirmation:
-            raise forms.ValidationError("Passwords do not match")
+            raise forms.ValidationError("Паролі не збігаються")
         return password_confirmation
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
-            raise forms.ValidationError("This username is already taken.")
+            raise forms.ValidationError("Ім'я користувача вже зайнято.")
         return username
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email is already registered.")
+            raise forms.ValidationError("Ця електронна адреса вже зареєстрована.")
         return email
+
+    def clean_terms(self):
+        terms = self.cleaned_data.get('terms')
+        if not terms:
+            raise forms.ValidationError("Ви повинні погодитись з умовами використання.")
+        return terms
