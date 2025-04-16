@@ -3,6 +3,8 @@ from .forms import UserRegistrationForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
+from .forms import BudgetForm
+from .models import Budget
 
 # Функція для реєстрації
 def register(request):
@@ -60,3 +62,25 @@ def createBudget(request):
 
 def readyMadeTemplates(request):
     return render(request, 'readyTemplates.html')
+
+def createBudget(request):
+    if request.method == 'POST':
+        form = BudgetForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('createBudget')  # Перенаправлення після збереження
+    else:
+        form = BudgetForm()
+
+    # Отримуємо останній бюджет (можна змінити логіку)
+    last_budget = Budget.objects.last()
+    income = last_budget.income if last_budget else 0
+    expenses = 50000  # Ти можеш зробити модель "витрати"
+    balance = income - expenses
+
+    return render(request, 'createBudget.html', {
+        'form': form,
+        'income': income,
+        'expenses': expenses,
+        'balance': balance
+    })

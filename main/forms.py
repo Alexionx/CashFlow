@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from .models import Budget
 
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -35,3 +36,14 @@ class UserRegistrationForm(forms.ModelForm):
         if not terms:
             raise forms.ValidationError("Ви повинні погодитись з умовами використання.")
         return terms
+
+class BudgetForm(forms.ModelForm):
+    class Meta:
+        model = Budget
+        fields = ['income']
+        widgets = {
+            'income': forms.NumberInput(attrs={
+                'class': 'form-control budget-input',
+                'placeholder': 'Введіть суму доходу',
+            })
+        }
