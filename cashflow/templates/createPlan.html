@@ -8,24 +8,22 @@
 <body class="bg-light">
 
 <!-- Include header -->
-
 {% include 'partials/header.html' %}
-
 
 <div class="container py-4">
   <div class="card shadow-sm">
     <div class="card-body">
       <h4 class="card-title mb-4">Додавання витрат</h4>
 
-      <form>
+      <form id="expense-form">
         <div class="mb-3">
           <label for="amount" class="form-label">Сума витрат:</label>
-          <input type="number" class="form-control" id="amount" placeholder="Введіть суму витрати">
+          <input type="number" class="form-control" id="amount" placeholder="Введіть суму витрати" required>
         </div>
 
         <div class="mb-3">
           <label for="category" class="form-label">Категорія:</label>
-          <select class="form-select" id="category">
+          <select class="form-select" id="category" required>
             <option selected>Харчування</option>
             <option>Транспорт</option>
             <option>Розваги</option>
@@ -35,7 +33,7 @@
 
         <div class="mb-3">
           <label for="date" class="form-label">Дата:</label>
-          <input type="date" class="form-control" id="date">
+          <input type="date" class="form-control" id="date" required>
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Додати витрату</button>
@@ -45,7 +43,7 @@
 
   <div class="card shadow-sm mt-4">
     <div class="card-body">
-      <table class="table table-hover table-bordered text-center mb-0">
+      <table class="table table-hover table-bordered text-center mb-0" id="expenses-table">
         <thead class="table-primary">
           <tr>
             <th>Категорія</th>
@@ -54,16 +52,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Харчування</td>
-            <td>400 грн</td>
-            <td>23.01.2004</td>
-          </tr>
-          <tr>
-            <td>Транспорт</td>
-            <td>800 грн</td>
-            <td>22.01.2004</td>
-          </tr>
+          <!-- Динамічно додані витрати -->
         </tbody>
       </table>
     </div>
@@ -72,6 +61,47 @@
 
 <!-- Include footer -->
 {% include 'partials/footer.html' %}
+
+<script>
+    // Отримуємо елементи форми та таблиці
+    const form = document.getElementById('expense-form');
+    const tableBody = document.querySelector('#expenses-table tbody');
+
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // Запобігаємо перезавантаженню сторінки
+
+        // Отримуємо значення з форми
+        const amount = document.getElementById('amount').value;
+        const category = document.getElementById('category').value;
+        const date = document.getElementById('date').value;
+
+        if (amount && category && date) {
+            // Створюємо новий рядок для таблиці
+            const tr = document.createElement('tr');
+
+            // Додаємо стовпці в рядок
+            const tdCategory = document.createElement('td');
+            tdCategory.textContent = category;
+            tr.appendChild(tdCategory);
+
+            const tdAmount = document.createElement('td');
+            tdAmount.textContent = `${amount} грн`;
+            tr.appendChild(tdAmount);
+
+            const tdDate = document.createElement('td');
+            tdDate.textContent = date;
+            tr.appendChild(tdDate);
+
+            // Додаємо рядок до таблиці
+            tableBody.appendChild(tr);
+
+            // Очищаємо форму після додавання витрати
+            form.reset();
+        } else {
+            alert('Будь ласка, заповніть всі поля.');
+        }
+    });
+</script>
 
 </body>
 </html>
