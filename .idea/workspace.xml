@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7a8e0c9b-18c4-41b6-bde7-1ce8fd51aee0" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/admin.py" afterDir="false" />
+    <list default="true" id="4e68c349-2b9d-46bd-af0c-e836ab69289f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashflow/templates/createPlan.html" beforeDir="false" afterPath="$PROJECT_DIR$/cashflow/templates/createPlan.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,23 +29,20 @@
     "accountId": "e5b22e0d-6360-4300-8e29-cece3fc63dc0"
   }
 }]]></component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 7
-}</component>
-  <component name="ProjectId" id="2vlyzjsXo0T02XMZAvva0o8m6tN" />
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 7
+}]]></component>
+  <component name="ProjectId" id="2w5YGA9676vCrQKZXNqXlAtyGQ6" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Python.models.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "ToolWindow.Terminal.ShowToolbar": "false",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/mysthade/Desktop/CashFlow-main"
+    "git-widget-placeholder": "Merging main"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -57,11 +55,11 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="7a8e0c9b-18c4-41b6-bde7-1ce8fd51aee0" name="Changes" comment="" />
-      <created>1744734220069</created>
+      <changelist id="4e68c349-2b9d-46bd-af0c-e836ab69289f" name="Changes" comment="" />
+      <created>1745332805407</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1744734220069</updated>
+      <updated>1745332805407</updated>
     </task>
     <servers />
   </component>
