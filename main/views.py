@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from .forms import BudgetForm
 from .models import Budget, Expense
+from django.contrib.auth.decorators import login_required
 
 # Функція для реєстрації
 def register(request):
@@ -42,28 +43,36 @@ def login_view(request):
     return render(request, 'login.html', {'form': form})
 
 # Функція для профілю
+@login_required
 def profile(request):
     return render(request, 'profile.html')
 
 # Інші функції
+@login_required
 def createPlan(request):
     return render(request, 'createPlan.html')
 
+@login_required
 def chart(request):
     return render(request, 'chart.html')
 
+@login_required
 def costs(request):
     return HttpResponse('<h4>Перевірка "Оцінка витрат"</h4>')
 
+@login_required
 def analytics(request):
     return HttpResponse('<h4>Перевірка "Аналітика перевиконання бюджету"</h4>')
 
+@login_required
 def createBudget(request):
     return render(request, 'createBudget.html')
 
+@login_required
 def readyMadeTemplates(request):
     return render(request, 'readyTemplates.html')
 
+@login_required
 def createBudget(request):
     if request.method == 'POST':
         form = BudgetForm(request.POST)
@@ -86,6 +95,7 @@ def createBudget(request):
         'balance': balance
     })
 
+@login_required
 def add_expense(request):
     if request.method == 'POST':
         # Отримуємо дані з форми
