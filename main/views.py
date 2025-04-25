@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.urls import reverse
 
 # Функція для реєстрації
 def register(request):
@@ -73,40 +74,45 @@ def readyMadeTemplates(request):
 
 @login_required
 def createBudget(request):
+    # Отримуємо дані для відображення
+    total_income = Budget.objects.aggregate(total=Sum('income'))['total'] or 0
+    last_income_record = Budget.objects.order_by('-date', '-created_at').first()
+    
     if request.method == 'POST':
         try:
-            income = float(request.POST.get('income', 0))  # Конвертуємо в число
+            income = float(request.POST.get('income', 0))
             income_category = request.POST.get('income_category', 'salary')
             date = request.POST.get('date') or timezone.now().date()
             
             if income <= 0:
                 messages.error(request, "Сума доходу має бути більше нуля")
-                return redirect('createBudget')
+                return render(request, 'createBudget.html', {
+                    'total_income': total_income,
+                    'last_income': last_income_record.income if last_income_record else 0,
+                    'current_date': timezone.now().date()
+                })
             
+            # Створюємо новий запис
             Budget.objects.create(
                 income=income,
                 income_category=income_category,
                 date=date,
-                expenses=0,  # Витрати за замовчуванням 0
-                balance=income  # Баланс = дохід - витрати (0)
+                expenses=0,
+                balance=income
             )
+            
             messages.success(request, f"Дохід {income} грн успішно додано!")
-            return redirect('createBudget')
+            # Просте перенаправлення на ту саму сторінку
+            return redirect('createBudget')  # Видалено reverse
             
         except ValueError:
             messages.error(request, "Будь ласка, введіть коректну суму доходу")
-            return redirect('createBudget')
         except Exception as e:
             messages.error(request, f"Помилка при додаванні доходу: {str(e)}")
-            return redirect('createBudget')
-
-    # Отримання даних для відображення
-    total_income = Budget.objects.aggregate(total=Sum('income'))['total'] or 0
-    last_income = Budget.objects.order_by('-date').first()
     
     return render(request, 'createBudget.html', {
         'total_income': total_income,
-        'last_income': last_income.income if last_income else 0,
+        'last_income': last_income_record.income if last_income_record else 0,
         'current_date': timezone.now().date()
     })
     

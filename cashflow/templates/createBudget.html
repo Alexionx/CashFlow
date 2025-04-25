@@ -26,60 +26,109 @@
   <div class="card shadow-sm rounded-4 p-4 budget-card">
     <h5 class="fw-bold mb-3">Додати дохід</h5>
 
-    <form method="POST" action="{% url 'createBudget' %}">
+    <form method="POST" action="{% url 'createBudget' %}" id="incomeForm">
       {% csrf_token %}
       
       <div class="mb-3">
         <label for="id_income" class="form-label">Сума доходу (грн):</label>
-        <input type="number" step="0.01" min="0" class="form-control" 
-               name="income" required id="id_income" placeholder="Введіть суму">
+        <input type="number" step="0.01" min="0.01" class="form-control" 
+               name="income" required id="id_income" placeholder="Введіть суму"
+               value="{{ request.POST.income }}">
       </div>
       
       <div class="mb-3">
         <label for="id_income_category" class="form-label">Категорія доходу:</label>
         <select class="form-select" name="income_category" id="id_income_category" required>
-          <option value="salary" selected>Зарплата</option>
-          <option value="bonus">Бонус</option>
-          <option value="freelance">Фріланс</option>
-          <option value="other">Інше</option>
+          <option value="salary" {% if request.POST.income_category == 'salary' %}selected{% endif %}>Зарплата</option>
+          <option value="bonus" {% if request.POST.income_category == 'bonus' %}selected{% endif %}>Бонус</option>
+          <option value="freelance" {% if request.POST.income_category == 'freelance' %}selected{% endif %}>Фріланс</option>
+          <option value="other" {% if request.POST.income_category == 'other' %}selected{% endif %}>Інше</option>
         </select>
       </div>
       
       <div class="mb-3">
         <label for="id_date" class="form-label">Дата доходу:</label>
         <input type="date" class="form-control" name="date" id="id_date" 
-               value="{{ current_date|date:'Y-m-d' }}" required>
+               value="{{ request.POST.date|default:current_date|date:'Y-m-d' }}" required>
       </div>
       
-      <button type="submit" class="btn btn-primary w-100 budget-btn">Зберегти дохід</button>
+      <button type="submit" class="btn btn-primary w-100 budget-btn" id="submitBtn">Зберегти дохід</button>
     </form>
     
     <div class="mt-4 p-3 rounded-4 summary-box">
-      <p class="mb-2 fw-bold">Загальний дохід: <span class="text-primary">{{ total_income|default:"0" }} грн</span></p>
-      <p class="mb-0 fw-bold">Останній дохід: <span class="text-primary">{{ last_income|default:"0" }} грн</span></p>
+      <p class="mb-2 fw-bold">Загальний дохід: 
+        <span class="text-primary">{{ total_income|floatformat:2 }} грн</span>
+      </p>
+      <p class="mb-0 fw-bold">Останній дохід: 
+        <span class="text-primary">
+          {% if last_income %}
+            {{ last_income|floatformat:2 }} грн 
+            {% if last_income_record.date %}
+              ({{ last_income_record.date|date:"d.m.Y" }})
+            {% endif %}
+          {% else %}
+            0 грн
+          {% endif %}
+        </span>
+      </p>
     </div>
   </div>
 </div>
 
-<!-- Bootstrap JS та Popper.js -->
+<!-- Підключення Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Додатковий JavaScript для кращого UX -->
+<!-- Додатковий JavaScript для запобігання повторній відправці -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Автоматичний фокус на полі суми при завантаженні сторінки
-    document.getElementById('id_income').focus();
-    
-    // Валідація форми перед відправкою
-    document.querySelector('form').addEventListener('submit', function(e) {
-      const income = document.getElementById('id_income').value;
-      if (!income || parseFloat(income) <= 0) {
-        alert('Будь ласка, введіть коректну суму доходу');
-        e.preventDefault();
+      // Запобігання повторній відправці форми
+      if (window.history.replaceState) {
+          window.history.replaceState(null, null, window.location.href);
       }
-    });
+  
+      // Блокування кнопки після відправки
+      const form = document.getElementById('incomeForm');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      if (form && submitBtn) {
+          form.addEventListener('submit', function() {
+              submitBtn.disabled = true;
+              submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Обробка...';
+          });
+      }
+  
+      // Валідація форми
+      if (form) {
+          form.addEventListener('submit', function(e) {
+              const incomeInput = document.getElementById('id_income');
+              const incomeValue = parseFloat(incomeInput.value);
+              
+              if (isNaN(incomeValue)) {
+                  alert('Будь ласка, введіть числове значення для суми доходу');
+                  e.preventDefault();
+                  return;
+              }
+              
+              if (incomeValue <= 0) {
+                  alert('Сума доходу має бути більше нуля');
+                  e.preventDefault();
+                  return;
+              }
+          });
+      }
+      
+      // Автоматичний фокус на полі суми
+      document.getElementById('id_income').focus();
+      
+      // Встановлення сьогоднішньої дати за замовчуванням
+      const dateInput = document.getElementById('id_date');
+      if (dateInput && !dateInput.value) {
+          const today = new Date();
+          const formattedDate = today.toISOString().substr(0, 10);
+          dateInput.value = formattedDate;
+      }
   });
-</script>
+  </script>
 
 </body>
 </html>
