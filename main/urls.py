@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import report_api
 
 urlpatterns = [
     path('register/', views.register, name='register'),
@@ -11,4 +12,5 @@ urlpatterns = [
     path('analytics/', views.analytics, name='analytics'),
     path('readyMadeTemplates/', views.readyMadeTemplates, name='readyMadeTemplates'),
     path('add_expense/', views.add_expense, name='add_expense'),
+    path('api/reports/', report_api, name='report_api'),
 ]

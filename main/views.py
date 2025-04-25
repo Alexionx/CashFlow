@@ -8,6 +8,8 @@ from .forms import BudgetForm
 from .models import Budget, Expense
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 # Функція для реєстрації
 def register(request):
@@ -72,29 +74,42 @@ def readyMadeTemplates(request):
 @login_required
 def createBudget(request):
     if request.method == 'POST':
-        form = BudgetForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('createBudget')  # Перенаправлення після збереження
-    else:
-        form = BudgetForm()
+        try:
+            income = float(request.POST.get('income', 0))  # Конвертуємо в число
+            income_category = request.POST.get('income_category', 'salary')
+            date = request.POST.get('date') or timezone.now().date()
+            
+            if income <= 0:
+                messages.error(request, "Сума доходу має бути більше нуля")
+                return redirect('createBudget')
+            
+            Budget.objects.create(
+                income=income,
+                income_category=income_category,
+                date=date,
+                expenses=0,  # Витрати за замовчуванням 0
+                balance=income  # Баланс = дохід - витрати (0)
+            )
+            messages.success(request, f"Дохід {income} грн успішно додано!")
+            return redirect('createBudget')
+            
+        except ValueError:
+            messages.error(request, "Будь ласка, введіть коректну суму доходу")
+            return redirect('createBudget')
+        except Exception as e:
+            messages.error(request, f"Помилка при додаванні доходу: {str(e)}")
+            return redirect('createBudget')
 
-    # Отримуємо останній бюджет (можна змінити логіку)
-    last_budget = Budget.objects.last()
-    income = last_budget.income if last_budget else 0
-
-    # Отримуємо загальну суму витрат з бази даних
-    total_expenses = Expense.objects.aggregate(Sum('amount'))['amount__sum'] or 0
-
-    balance = income - total_expenses
-
+    # Отримання даних для відображення
+    total_income = Budget.objects.aggregate(total=Sum('income'))['total'] or 0
+    last_income = Budget.objects.order_by('-date').first()
+    
     return render(request, 'createBudget.html', {
-        'form': form,
-        'income': income,
-        'expenses': total_expenses,
-        'balance': balance
+        'total_income': total_income,
+        'last_income': last_income.income if last_income else 0,
+        'current_date': timezone.now().date()
     })
-
+    
 @login_required
 def add_expense(request):
     if request.method == 'POST':
@@ -115,3 +130,115 @@ def add_expense(request):
     # GET-запит — просто показуємо список витрат
     expenses = Expense.objects.all().order_by('-date')
     return render(request, 'createPlan.html', {'expenses': expenses})
+
+@login_required
+def report_api(request):
+    period = request.GET.get('period', 'month')
+    date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+    
+    try:
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except:
+        date = datetime.now().date()
+    
+    # Отримуємо дані за вибраний період
+    if period == 'day':
+        # Дані за день
+        expenses = Expense.objects.filter(date=date)
+        budgets = Budget.objects.filter(created_at__date=date)
+        
+        labels = [f"{date.strftime('%d.%m.%Y')}"]
+        xAxisTitle = "День"
+        
+    elif period == 'month':
+        # Дані за місяць (по днях)
+        start_date = date.replace(day=1)
+        end_date = (start_date + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        expenses = Expense.objects.filter(date__range=[start_date, end_date])
+        budgets = Budget.objects.filter(created_at__date__range=[start_date, end_date])
+        
+        # Генеруємо мітки для кожного дня місяця
+        labels = []
+        current_date = start_date
+        while current_date <= end_date:
+            labels.append(current_date.strftime('%d.%m'))
+            current_date += timedelta(days=1)
+        
+        xAxisTitle = "Дні місяця"
+        
+    else:  # year
+        # Дані за рік (по місяцях)
+        start_date = date.replace(month=1, day=1)
+        end_date = date.replace(month=12, day=31)
+        
+        expenses = Expense.objects.filter(date__range=[start_date, end_date])
+        budgets = Budget.objects.filter(created_at__date__range=[start_date, end_date])
+        
+        labels = ['Січ', 'Лют', 'Бер', 'Кві', 'Тра', 'Чер', 'Лип', 'Сер', 'Вер', 'Жов', 'Лис', 'Гру']
+        xAxisTitle = "Місяці року"
+    
+    # Підготовка даних для графіка
+    if period == 'day':
+        income = [float(budgets.aggregate(total=Sum('income'))['total'] or 0)]
+        expenses_data = [float(expenses.aggregate(total=Sum('amount'))['total'] or 0)]
+        
+    elif period == 'month':
+        income = [0] * end_date.day
+        expenses_data = [0] * end_date.day
+        
+        # Розподіл доходів по днях
+        for budget in budgets:
+            day = budget.created_at.day - 1
+            income[day] += float(budget.income)
+        
+        # Розподіл витрат по днях
+        for expense in expenses:
+            day = expense.date.day - 1
+            expenses_data[day] += float(expense.amount)
+            
+    else:  # year
+        income = [0] * 12
+        expenses_data = [0] * 12
+        
+        # Розподіл доходів по місяцях
+        for budget in budgets:
+            month = budget.created_at.month - 1
+            income[month] += float(budget.income)
+        
+        # Розподіл витрат по місяцях
+        for expense in expenses:
+            month = expense.date.month - 1
+            expenses_data[month] += float(expense.amount)
+    
+    # Підготовка даних для таблиці
+    transactions = []
+    
+    # Додаємо витрати
+    for expense in expenses:
+        transactions.append({
+            'date': expense.date.strftime('%d.%m.%Y'),
+            'type': 'Витрати',
+            'amount': expense.amount,
+            'category': expense.get_category_display()
+        })
+    
+    # Додаємо доходи з їх датами
+    for budget in budgets:
+        transactions.append({
+            'date': budget.created_at.strftime('%d.%m.%Y'),
+            'type': 'Доходи',
+            'amount': budget.income,
+            'category': 'Зарплата'  # Можна додати поле категорії для доходів у моделі
+        })
+    
+    # Сортуємо транзакції по даті
+    transactions.sort(key=lambda x: datetime.strptime(x['date'], '%d.%m.%Y'), reverse=True)
+    
+    return JsonResponse({
+        'labels': labels,
+        'income': income,
+        'expenses': expenses_data,
+        'xAxisTitle': xAxisTitle,
+        'transactions': transactions
+    })
