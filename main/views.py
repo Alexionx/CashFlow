@@ -7,6 +7,7 @@ from django.contrib import messages
 from .forms import BudgetForm
 from .models import Budget, Expense
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
 
 # Функція для реєстрації
 def register(request):
@@ -65,10 +66,6 @@ def analytics(request):
     return HttpResponse('<h4>Перевірка "Аналітика перевиконання бюджету"</h4>')
 
 @login_required
-def createBudget(request):
-    return render(request, 'createBudget.html')
-
-@login_required
 def readyMadeTemplates(request):
     return render(request, 'readyTemplates.html')
 
@@ -85,26 +82,27 @@ def createBudget(request):
     # Отримуємо останній бюджет (можна змінити логіку)
     last_budget = Budget.objects.last()
     income = last_budget.income if last_budget else 0
-    expenses = 50000  # Ти можеш зробити модель "витрати"
-    balance = income - expenses
+
+    # Отримуємо загальну суму витрат з бази даних
+    total_expenses = Expense.objects.aggregate(Sum('amount'))['amount__sum'] or 0
+
+    balance = income - total_expenses
 
     return render(request, 'createBudget.html', {
         'form': form,
         'income': income,
-        'expenses': expenses,
+        'expenses': total_expenses,
         'balance': balance
     })
 
 @login_required
 def add_expense(request):
     if request.method == 'POST':
-        # Отримуємо дані з форми
         amount = request.POST.get('amount')
         category = request.POST.get('category')
         date = request.POST.get('date')
 
         if amount and category and date:
-            # Створюємо новий запис у базі даних
             expense = Expense.objects.create(
                 amount=amount,
                 category=category,
@@ -113,28 +111,7 @@ def add_expense(request):
             return JsonResponse({'status': 'success', 'message': 'Витрату додано!', 'expense_id': expense.id})
         else:
             return JsonResponse({'status': 'error', 'message': 'Будь ласка, заповніть всі поля.'})
-    return render(request, 'createPlan.html')
 
-def create_budget(request):
-    if request.method == 'POST':
-        form = BudgetForm(request.POST)
-        if form.is_valid():
-            form.save()  # Зберігаємо новий бюджет
-    else:
-        form = BudgetForm()
-
-    # Отримуємо останній бюджет
-    try:
-        budget = Budget.objects.latest('id')  # Отримуємо останній запис бюджету
-        income = budget.income
-        expenses = budget.expenses
-        balance = budget.balance
-    except Budget.DoesNotExist:
-        income = expenses = balance = 0
-
-    return render(request, 'create_budget.html', {
-        'form': form,
-        'income': income,
-        'expenses': expenses,
-        'balance': balance,
-    })
+    # GET-запит — просто показуємо список витрат
+    expenses = Expense.objects.all().order_by('-date')
+    return render(request, 'createPlan.html', {'expenses': expenses})
