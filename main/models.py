@@ -5,6 +5,10 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User
 
 class Budget(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
+    
+    class Meta:
+        ordering = ['-date']
     INCOME_CATEGORIES = [
         ('salary', 'Зарплата'),
         ('bonus', 'Бонус'),
@@ -29,7 +33,12 @@ class Budget(models.Model):
         return f"{self.get_income_category_display()}: {self.income} грн ({self.date})"
 
 
+
 class Expense(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')
+    
+    class Meta:
+        ordering = ['-date']
     CATEGORY_CHOICES = [
         ('food', 'Харчування'),
         ('transport', 'Транспорт'),

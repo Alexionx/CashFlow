@@ -14,43 +14,97 @@ from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from django.contrib.auth import logout
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
+from django.db import IntegrityError
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as EmailValidationError
 
 # Функція для реєстрації
 def register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
+        
         if form.is_valid():
             try:
-                # Отримуємо дані форми
-                user = form.save(commit=False)  # Не зберігаємо ще користувача
-                user.set_password(form.cleaned_data['password'])  # Хешуємо пароль
-                user.save()  # Зберігаємо користувача з хешованим паролем
-                login(request, user)  # Авторизуємо користувача після реєстрації
-                return redirect('home')  # Перенаправлення на сторінку профілю
+                # Перевірка валідності email
+                email = form.cleaned_data['email']
+                # Замість стандартного validate_email
+                try:
+                    validate_email(email)
+                except EmailValidationError:
+                    form.add_error('email', 'Будь ласка, введіть коректну email адресу')
+                    return render(request, 'registration.html', {'form': form})
+                
+                # Перевірка унікальності email
+                if User.objects.filter(email=email).exists():
+                    form.add_error('email', 'Ця електронна адреса вже зареєстрована')
+                    return render(request, 'registration.html', {'form': form})
+                
+                # Перевірка складності пароля
+                password = form.cleaned_data['password']
+                try:
+                    validate_password(password, user=form.instance)
+                except ValidationError as e:
+                    for error in e.messages:
+                        form.add_error('password', error)
+                    return render(request, 'registration.html', {'form': form})
+                
+                # Перевірка збігу паролів
+                if password != form.cleaned_data['password_confirmation']:
+                    form.add_error('password_confirmation', 'Паролі не збігаються')
+                    return render(request, 'registration.html', {'form': form})
+                
+                # Перевірка умов використання
+                if not form.cleaned_data.get('terms'):
+                    form.add_error('terms', 'Ви повинні погодитись з умовами використання')
+                    return render(request, 'registration.html', {'form': form})
+                
+                # Створення користувача
+                user = form.save(commit=False)
+                user.set_password(password)
+                user.save()
+                
+                login(request, user)
+                messages.success(request, 'Реєстрація успішна! Ласкаво просимо!')
+                return redirect('home')
+                
             except IntegrityError:
-                # Якщо виникає помилка унікальності
-                form.add_error('username', 'Користувач з таким ім\'ям вже існує!')
-    else:
-        form = UserRegistrationForm()
-
-    return render(request, 'registration.html', {'form': form})
+                form.add_error('username', 'Користувач з таким ім\'ям вже існує')
+        
+        return render(request, 'registration.html', {'form': form})
+    
+    return render(request, 'registration.html', {'form': UserRegistrationForm()})
 
 # Функція для входу
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
-
+        
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             user = authenticate(request, username=username, password=password)
-
+            
             if user is not None:
                 login(request, user)
-                return redirect('home')  # редірект на домашню сторінку після входу
+                return redirect('home')
+            else:
+                messages.error(request, 'Невірне ім\'я користувача або пароль')
+        else:
+            # Кастомні повідомлення про помилки
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if 'username' in field:
+                        messages.error(request, 'Будь ласка, введіть коректне ім\'я користувача')
+                    elif 'password' in field:
+                        messages.error(request, 'Будь ласка, введіть пароль')
+                    else:
+                        messages.error(request, error)
+    
     else:
         form = AuthenticationForm()
-
+    
     return render(request, 'login.html', {'form': form})
 
 # Функція для профілю
@@ -81,9 +135,10 @@ def readyMadeTemplates(request):
 
 @login_required
 def createBudget(request):
-    # Отримуємо дані для відображення
-    total_income = Budget.objects.aggregate(total=Sum('income'))['total'] or 0
-    last_income_record = Budget.objects.order_by('-date', '-created_at').first()
+    user = request.user
+    # Отримуємо дані тільки для поточного користувача
+    total_income = Budget.objects.filter(user=user).aggregate(total=Sum('income'))['total'] or 0
+    last_income_record = Budget.objects.filter(user=user).order_by('-date', '-created_at').first()
     
     if request.method == 'POST':
         try:
@@ -99,8 +154,9 @@ def createBudget(request):
                     'current_date': timezone.now().date()
                 })
             
-            # Створюємо новий запис
+            # Додаємо поточного користувача до запису
             Budget.objects.create(
+                user=user,
                 income=income,
                 income_category=income_category,
                 date=date,
@@ -125,6 +181,7 @@ def createBudget(request):
     
 @login_required
 def add_expense(request):
+    user = request.user
     if request.method == 'POST':
         amount = request.POST.get('amount')
         category = request.POST.get('category')
@@ -132,6 +189,7 @@ def add_expense(request):
 
         if amount and category and date:
             expense = Expense.objects.create(
+                user=user,
                 amount=amount,
                 category=category,
                 date=date,
@@ -140,54 +198,45 @@ def add_expense(request):
         else:
             return JsonResponse({'status': 'error', 'message': 'Будь ласка, заповніть всі поля.'})
 
-    # GET-запит — просто показуємо список витрат
-    expenses = Expense.objects.all().order_by('-date')
+    # GET-запит - показуємо тільки витрати поточного користувача
+    expenses = Expense.objects.filter(user=user).order_by('-date')
     return render(request, 'createPlan.html', {'expenses': expenses})
 
 @login_required
 def report_api(request):
+    user = request.user
     period = request.GET.get('period', 'month')
-    date_str = request.GET.get('date', datetime.now().strftime('%Y-%m-%d'))
+    date_str = request.GET.get('date', timezone.now().strftime('%Y-%m-%d'))
     
     try:
         date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except:
-        date = datetime.now().date()
+        date = timezone.now().date()
     
-    # Отримуємо дані за вибраний період
+    # Отримуємо дані тільки для поточного користувача
     if period == 'day':
-        # Дані за день
-        expenses = Expense.objects.filter(date=date)
-        budgets = Budget.objects.filter(created_at__date=date)
-        
-        labels = [f"{date.strftime('%d.%m.%Y')}"]
+        expenses = Expense.objects.filter(user=user, date=date)
+        budgets = Budget.objects.filter(user=user, date=date)
+        labels = [date.strftime('%d.%m.%Y')]
         xAxisTitle = "День"
         
     elif period == 'month':
-        # Дані за місяць (по днях)
         start_date = date.replace(day=1)
         end_date = (start_date + timedelta(days=32)).replace(day=1) - timedelta(days=1)
-        
-        expenses = Expense.objects.filter(date__range=[start_date, end_date])
-        budgets = Budget.objects.filter(created_at__date__range=[start_date, end_date])
-        
-        # Генеруємо мітки для кожного дня місяця
+        expenses = Expense.objects.filter(user=user, date__range=[start_date, end_date])
+        budgets = Budget.objects.filter(user=user, date__range=[start_date, end_date])
         labels = []
         current_date = start_date
         while current_date <= end_date:
             labels.append(current_date.strftime('%d.%m'))
             current_date += timedelta(days=1)
-        
         xAxisTitle = "Дні місяця"
         
     else:  # year
-        # Дані за рік (по місяцях)
         start_date = date.replace(month=1, day=1)
         end_date = date.replace(month=12, day=31)
-        
-        expenses = Expense.objects.filter(date__range=[start_date, end_date])
-        budgets = Budget.objects.filter(created_at__date__range=[start_date, end_date])
-        
+        expenses = Expense.objects.filter(user=user, date__range=[start_date, end_date])
+        budgets = Budget.objects.filter(user=user, date__range=[start_date, end_date])
         labels = ['Січ', 'Лют', 'Бер', 'Кві', 'Тра', 'Чер', 'Лип', 'Сер', 'Вер', 'Жов', 'Лис', 'Гру']
         xAxisTitle = "Місяці року"
     
@@ -269,17 +318,6 @@ def profile_view(request):
         'profile': user.profile
     }
     return render(request, 'profile.html', context)
-
-def login_view(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('profile')  # Перенаправляємо на профіль після логіну
-    else:
-        form = AuthenticationForm()
-    return render(request, 'login.html', {'form': form})
 
 @login_required
 def update_profile(request):
