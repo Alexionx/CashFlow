@@ -32,7 +32,11 @@
         <!-- Кнопка-аватар -->
         <li class="nav-item ms-3">
           <a href="{% url 'profile' %}" class="d-inline-block">
-            <img src="{% static 'images/avatar.png' %}" alt="Аватар" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+            <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{% static 'images/avatar.png' %}{% endif %}" 
+                 id="header-avatar" 
+                 alt="Аватар" 
+                 class="rounded-circle" 
+                 style="width: 40px; height: 40px; object-fit: cover;">
           </a>
         </li>
       </ul>

@@ -73,6 +73,7 @@ class Profile(models.Model):
     date_registered = models.DateTimeField(auto_now_add=True)
     username_cache = models.CharField(max_length=150, blank=True)
     email_cache = models.EmailField(blank=True)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Оновлюємо кешовані поля перед збереженням

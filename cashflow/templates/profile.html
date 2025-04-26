@@ -32,7 +32,43 @@
             font-weight: bold;
             margin-top: 10px;
         }
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px; /* Відповідно до розміру аватарки */
+            height: 100px; /* Відповідно до розміру аватарки */
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .avatar-overlay i {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .avatar-overlay span {
+            font-size: 12px;
+        }
+
     </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body>
 
@@ -42,21 +78,28 @@
         <div class="row">
             <!-- Left column (User info) -->
             <div class="col-md-6">
-                <div class="d-flex align-items-center mb-4">
-                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img me-3" alt="Avatar">
-                    <div>
-                        <h6 class="mb-1">{{ user.username }}</h6>
-                        <p class="mb-0 text-muted">{{ user.email }}</p>
-                    </div>
-                    <button class="btn btn-primary ms-auto" id="edit-btn">Змінити</button>
-                </div>
+             <div class="d-flex align-items-center mb-4">
+    <label for="avatar-input" class="position-relative avatar-container" style="cursor: pointer;">
+        <img src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}https://cdn-icons-png.flaticon.com/512/149/149071.png{% endif %}" class="profile-img me-3" alt="Avatar" id="user-avatar">
+        <div class="avatar-overlay">
+            <i class="bi bi-camera-fill"></i>
+            <span>Змінити</span>
+        </div>
+        <input type="file" id="avatar-input" accept="image/*" style="display: none;">
+    </label>
+    <div>
+        <h6 class="mb-1">{{ user.username }}</h6>
+        <p class="mb-0 text-muted">{{ user.email }}</p>
+    </div>
+    <button class="btn btn-primary ms-auto" id="edit-btn">Змінити</button>
+</div>
 
                 <form id="profile-form">
                     {% csrf_token %}
                     <!-- Full Name input -->
                     <div class="mb-3">
                         <label class="form-label">Повне ім'я</label>
-                        <input type="text" class="form-control" placeholder="Ім'я" id="full-name" name="full_name" value="{{ user.first_name }} {{ user.last_name }}" disabled>
+                        <input type="text" class="form-control" placeholder="Ім'я" id="full-name" name="full_name" value="{{ user.first_name }}{% if user.first_name and user.last_name %} {% endif %}{{ user.last_name }}" disabled>
                     </div>
                 
                     <!-- Gender selection -->
@@ -637,7 +680,7 @@
                             alert('Помилка під час збереження картки!');
                         });
                     });
-                });
+        });
                 </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
@@ -710,8 +753,64 @@ document.getElementById('save-btn').addEventListener('click', function(event) {
         document.getElementById('success-message').textContent = 'Помилка під час збереження даних!';
     });
 });
-    </script>
+function uploadAvatar(file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
     
+    // Отримуємо CSRF токен
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch('{% url "upload_avatar" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Оновлюємо аватарку в хедері
+            const headerAvatar = document.getElementById('header-avatar');
+            if (headerAvatar) {
+                headerAvatar.src = document.getElementById('user-avatar').src; // Виправлено тут
+            }
+            
+            // Показуємо повідомлення про успішне завантаження
+            document.getElementById('success-message').style.display = 'block';
+            document.getElementById('success-message').style.color = 'green';
+            document.getElementById('success-message').textContent = 'Аватарка успішно оновлена!';
+            
+            // Приховуємо повідомлення через 3 секунди
+            setTimeout(function() {
+                document.getElementById('success-message').style.display = 'none';
+            }, 3000);
+        } else {
+            throw new Error(data.message || 'Помилка завантаження аватарки');
+        }
+    })
+    .catch(error => {
+        console.error('Помилка:', error);
+        document.getElementById('success-message').style.display = 'block';
+        document.getElementById('success-message').style.color = 'red';
+        document.getElementById('success-message').textContent = `Помилка: ${error.message}`;
+    });
+}
+document.getElementById('avatar-input').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Створюємо попередній перегляд
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('user-avatar').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+        
+        // Відправляємо файл на сервер
+        uploadAvatar(file);
+    }
+});
+
 </script>
 </body>
 </html>

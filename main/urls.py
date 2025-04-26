@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf.urls.static import static
+from cashflow import settings
 from . import views
 from .views import report_api
 
@@ -19,4 +21,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('save-card/', views.save_card, name='save_card'),
     path('get-cards/', views.get_user_cards, name='get_cards'),
+    path('upload_avatar/', views.upload_avatar, name='upload_avatar'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

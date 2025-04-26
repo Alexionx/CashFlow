@@ -24,6 +24,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserCard
 import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 
 # Функція для реєстрації
@@ -424,3 +427,27 @@ def get_user_cards(request):
         'message': 'Необхідно авторизуватися'
     }, status=401)
 
+
+@login_required
+@require_POST
+def upload_avatar(request):
+    if 'avatar' in request.FILES:
+        avatar = request.FILES['avatar']
+        
+        # Перевірка розміру (5MB)
+        if avatar.size > 5 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'Розмір файлу перевищує 5MB'})
+        
+        # Перевірка типу файлу
+        valid_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if avatar.content_type not in valid_types:
+            return JsonResponse({'status': 'error', 'message': 'Недопустимий формат файлу'})
+        
+        # Збереження аватарки в профілі користувача
+        profile = request.user.profile
+        profile.avatar = avatar
+        profile.save()
+        
+        return JsonResponse({'status': 'success', 'message': 'Аватарка успішно оновлена'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Файл не знайдено'})
