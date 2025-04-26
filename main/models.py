@@ -1,5 +1,8 @@
 from django.utils import timezone
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth.models import User
 
 class Budget(models.Model):
     INCOME_CATEGORIES = [
@@ -41,3 +44,45 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.amount} грн"
+    
+
+class Profile(models.Model):
+    GENDER_CHOICES = [
+        ('not_selected', 'Не вибрано'),
+        ('male', 'Чоловік'),
+        ('female', 'Жінка'),
+    ]
+    
+    LANGUAGE_CHOICES = [
+        ('uk', 'Українська'),
+        ('en', 'English'),
+    ]
+    full_name = models.CharField(max_length=100)
+    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='uk')
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, default='not_selected')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    date_registered = models.DateTimeField(auto_now_add=True)
+    username_cache = models.CharField(max_length=150, blank=True)
+    email_cache = models.EmailField(blank=True)
+
+    def save(self, *args, **kwargs):
+        # Оновлюємо кешовані поля перед збереженням
+        if self.user:
+            self.username_cache = self.user.username
+            self.email_cache = self.user.email
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.user.username
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        full_name = f"{instance.first_name} {instance.last_name}".strip()
+        Profile.objects.create(user=instance, full_name=full_name)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.full_name = f"{instance.first_name} {instance.last_name}".strip()
+    instance.profile.save()
+    

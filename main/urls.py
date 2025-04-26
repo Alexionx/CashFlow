@@ -13,4 +13,8 @@ urlpatterns = [
     path('readyMadeTemplates/', views.readyMadeTemplates, name='readyMadeTemplates'),
     path('add_expense/', views.add_expense, name='add_expense'),
     path('api/reports/', report_api, name='report_api'),
+    path('profile/', views.profile_view, name='profile'),
+    path('profile/update/', views.update_profile, name='update_profile'),
+    path('logout/', views.logout_view, name='logout'),
+     path('login/', views.login_view, name='login'),
 ]

@@ -1,3 +1,4 @@
+from sqlite3 import IntegrityError
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from .forms import UserRegistrationForm
@@ -11,18 +12,24 @@ from django.db.models import Sum
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.urls import reverse
+from django.views.decorators.http import require_POST
+from django.contrib.auth import logout
 
 # Функція для реєстрації
 def register(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            # Отримуємо дані форми
-            user = form.save(commit=False)  # Не зберігаємо ще користувача
-            user.set_password(form.cleaned_data['password'])  # Хешуємо пароль
-            user.save()  # Зберігаємо користувача з хешованим паролем
-            login(request, user)  # Авторизуємо користувача після реєстрації
-            return redirect('home')  # Перенаправлення на сторінку профілю
+            try:
+                # Отримуємо дані форми
+                user = form.save(commit=False)  # Не зберігаємо ще користувача
+                user.set_password(form.cleaned_data['password'])  # Хешуємо пароль
+                user.save()  # Зберігаємо користувача з хешованим паролем
+                login(request, user)  # Авторизуємо користувача після реєстрації
+                return redirect('home')  # Перенаправлення на сторінку профілю
+            except IntegrityError:
+                # Якщо виникає помилка унікальності
+                form.add_error('username', 'Користувач з таким ім\'ям вже існує!')
     else:
         form = UserRegistrationForm()
 
@@ -248,3 +255,73 @@ def report_api(request):
         'xAxisTitle': xAxisTitle,
         'transactions': transactions
     })
+
+def logout_view(request):
+    logout(request)  # Викликає функцію для виходу користувача
+    return redirect('login')  # Перенаправлення на сторінку логіну
+
+@login_required
+def profile_view(request):
+    """Відображення профілю користувача"""
+    user = request.user
+    context = {
+        'user': user,
+        'profile': user.profile
+    }
+    return render(request, 'profile.html', context)
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('profile')  # Перенаправляємо на профіль після логіну
+    else:
+        form = AuthenticationForm()
+    return render(request, 'login.html', {'form': form})
+
+@login_required
+def update_profile(request):
+    if request.method == 'POST':
+        # Отримуємо поточного користувача
+        user = request.user
+        profile = user.profile
+
+        # Оновлення повного імені
+        if 'full_name' in request.POST:
+            full_name = request.POST.get('full_name', '').strip()
+
+            # Перевірка наявності пробілу для розділення на ім'я та прізвище
+            if ' ' in full_name:
+                first_name, last_name = full_name.split(' ', 1)
+            else:
+                first_name, last_name = full_name, ''
+            
+            # Оновлюємо ім'я та прізвище користувача
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()  # Зберігаємо зміни користувача
+
+            # Оновлюємо поле `full_name` в профілі
+            profile.full_name = full_name
+            profile.save()  # Зберігаємо зміни профілю
+
+        # Оновлення інших даних профілю
+        if 'gender' in request.POST:
+            profile.gender = request.POST.get('gender', 'not_selected')
+
+        if 'language' in request.POST:
+            profile.language = request.POST.get('language', 'uk')
+
+        # Зберігаємо зміни профілю
+        profile.save()
+
+        # Повертаємо повідомлення про успішне оновлення
+        return JsonResponse({'status': 'success', 'message': 'Дані успішно збережено!'})
+
+    # Якщо запит не POST, перенаправляємо на сторінку профілю
+    return redirect('profile')
+
+
+

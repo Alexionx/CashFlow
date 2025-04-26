@@ -54,4 +54,78 @@ body.profile-bg {
   .btn-add-card:hover {
     background-color: #335fcc;
   }
-  
+  /* Основні стилі для карток */
+#cardCarousel .carousel-item {
+  padding: 20px;
+  transition: transform 0.5s ease;
+}
+
+#cardCarousel .card {
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+#cardCarousel .card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Стилі для порожньої каруселі */
+.carousel-empty {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  border: 2px dashed #dee2e6;
+  margin-bottom: 20px;
+}
+
+/* Анімація для додавання картки */
+@keyframes cardAppear {
+  from {
+      opacity: 0;
+      transform: translateY(20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.card-appear {
+  animation: cardAppear 0.5s forwards;
+}
+
+/* Спеціальні стилі для кнопки додавання */
+.btn-add-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.btn-add-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-add-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-add-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.5s;
+}
+
+.btn-add-card:hover::before {
+  left: 100%;
+}

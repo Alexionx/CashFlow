@@ -5,9 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4e68c349-2b9d-46bd-af0c-e836ab69289f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dbnavigator.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dbnavigator.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0006_profile.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0007_profile_full_name.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0008_profile_date_registered.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0009_profile_email_profile_username.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0010_remove_profile_email_remove_profile_username.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0011_rename_full_name_profile_first_name.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0012_remove_profile_first_name_profile_full_name.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/main/migrations/0013_profile_email_cache_profile_username_cache.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cashflow/templates/createPlan.html" beforeDir="false" afterPath="$PROJECT_DIR$/cashflow/templates/createPlan.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashflow/static/css/profile.css" beforeDir="false" afterPath="$PROJECT_DIR$/cashflow/static/css/profile.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cashflow/templates/profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/cashflow/templates/profile.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/main/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,34 +29,34 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "AndriyXACK"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;AndriyXACK&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Alexionx/CashFlow.git",
-    "accountId": "e5b22e0d-6360-4300-8e29-cece3fc63dc0"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Alexionx/CashFlow.git&quot;,
+    &quot;accountId&quot;: &quot;e5b22e0d-6360-4300-8e29-cece3fc63dc0&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 7
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="2w5YGA9676vCrQKZXNqXlAtyGQ6" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Merging main"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Rebasing main&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
