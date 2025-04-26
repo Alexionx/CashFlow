@@ -95,3 +95,14 @@ def save_user_profile(sender, instance, **kwargs):
     instance.profile.full_name = f"{instance.first_name} {instance.last_name}".strip()
     instance.profile.save()
     
+class UserCard(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cards')
+    card_number = models.CharField(max_length=19)  # Зберігаємо з пробілами для відображення
+    card_holder = models.CharField(max_length=100)
+    expiry_date = models.CharField(max_length=5)
+    cvv = models.CharField(max_length=3)
+    card_type = models.CharField(max_length=20, default='BANK')
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_added']

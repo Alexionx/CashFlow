@@ -19,6 +19,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.db import IntegrityError
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError as EmailValidationError
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import UserCard
+import json
+
 
 # Функція для реєстрації
 def register(request):
@@ -361,5 +367,60 @@ def update_profile(request):
     # Якщо запит не POST, перенаправляємо на сторінку профілю
     return redirect('profile')
 
+@csrf_exempt
+def save_card(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Створення нової картки
+            card = UserCard(
+                user=request.user,
+                card_number=data.get('cardNumber'),
+                card_holder=data.get('cardHolder'),
+                expiry_date=data.get('cardExpiry'),
+                cvv=data.get('cardCvv'),
+                card_type=data.get('cardType')
+            )
+            card.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Картку збережено успішно',
+                'card_id': card.id
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Метод не підтримується'
+    }, status=405)
 
+def get_user_cards(request):
+    if request.user.is_authenticated:
+        cards = request.user.cards.all()
+        cards_data = []
+        
+        for card in cards:
+            cards_data.append({
+                'id': card.id,
+                'card_number': card.card_number,
+                'card_holder': card.card_holder,
+                'expiry_date': card.expiry_date,
+                'card_type': card.card_type
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'cards': cards_data
+        })
+    
+    return JsonResponse({
+        'status': 'error',
+        'message': 'Необхідно авторизуватися'
+    }, status=401)
 

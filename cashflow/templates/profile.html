@@ -96,6 +96,9 @@
 
             <!-- Right column (Cards carousel) -->
             <div class="col-md-6 text-center">
+                <form id="cardStorageForm" style="display:none;">
+                    {% csrf_token %}
+                </form>
                 <h5 class="mb-4">Мої картки</h5>
                 <div id="cardCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
                     <div class="carousel-inner" id="carouselItems">
@@ -105,7 +108,7 @@
                                     <div class="chip"></div>
                                     <div class="card-number-display">4111 1111 1111 1111</div>
                                     <div class="card-details">
-                                        <div class="card-holder-name">Максим Михалусь</div>
+                                        <div class="card-holder-name">Test Cards</div>
                                         <div class="expiry-date">12/26</div>
                                     </div>
                                     <div class="card-type-logo">VISA</div>
@@ -165,7 +168,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="cardHolder" class="form-label">Ім'я власника</label>
-                                    <input type="text" class="form-control" id="cardHolder" placeholder="Максим Михалусь">
+                                    <input type="text" class="form-control" id="cardHolder" placeholder="Test Cards">
                                 </div>
                                 <div class="row">
                                     <div class="col-6">
@@ -315,6 +318,32 @@
             .carousel-item {
                 padding: 20px 0;
             }
+            .carousel-control-prev, .carousel-control-next {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            width: 10%;
+            }
+
+            .carousel-control-prev-icon, .carousel-control-next-icon {
+                background-color: rgba(0,0,0,0.5);
+                border-radius: 50%;
+                padding: 10px;
+            }
+
+            #cardCarousel:hover .carousel-control-prev,
+            #cardCarousel:hover .carousel-control-next {
+                opacity: 1;
+            }
+
+            /* Покращений вигляд карток */
+            .credit-card-display {
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            }
+
+            .credit-card-display:hover {
+                transform: scale(1.05);
+            }
             
             /* Анімація для каруселі */
             @keyframes cardSpin {
@@ -333,157 +362,283 @@
             </style>
             
             <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const addCardBtn = document.getElementById('add-card-btn');
-                const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-                const cardNumberInput = document.getElementById('cardNumber');
-                const cardHolderInput = document.getElementById('cardHolder');
-                const cardExpiryInput = document.getElementById('cardExpiry');
-                const cardCvvInput = document.getElementById('cardCvv');
+                document.addEventListener('DOMContentLoaded', function() {
+                    const addCardBtn = document.getElementById('add-card-btn');
+                    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+                    const cardNumberInput = document.getElementById('cardNumber');
+                    const cardHolderInput = document.getElementById('cardHolder');
+                    const cardExpiryInput = document.getElementById('cardExpiry');
+                    const cardCvvInput = document.getElementById('cardCvv');
+                    const carouselElement = document.getElementById('cardCarousel');
+                    
+                    // Активуємо карусель з автоматичним обертанням
+                    const carousel = new bootstrap.Carousel(carouselElement, {
+                        interval: 5000,
+                        ride: 'carousel',
+                        wrap: true
+                    });
                 
-                // Активуємо карусель з автоматичним обертанням
-                const carousel = new bootstrap.Carousel(document.getElementById('cardCarousel'), {
-                    interval: 5000,
-                    ride: 'carousel',
-                    wrap: true
-                });
-            
-                // Відкриваємо модальне вікно для додавання картки
-                addCardBtn.addEventListener('click', function() {
-                    modal.show();
-                });
-            
-                // Форматування введення номера картки з пробілами
-                cardNumberInput.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    let formattedValue = '';
+                    // Приховуємо стрілки за замовчуванням
+                    const prevButton = document.querySelector('.carousel-control-prev');
+                    const nextButton = document.querySelector('.carousel-control-next');
                     
-                    for (let i = 0; i < value.length; i++) {
-                        if (i > 0 && i % 4 === 0) {
-                            formattedValue += ' ';
+                    if (prevButton && nextButton) {
+                        prevButton.style.opacity = '0';
+                        nextButton.style.opacity = '0';
+                        prevButton.style.transition = 'opacity 0.3s';
+                        nextButton.style.transition = 'opacity 0.3s';
+                    }
+                
+                    // Показуємо/ховаємо стрілки при наведенні миші
+                    carouselElement.addEventListener('mouseenter', function() {
+                        const carouselItems = document.querySelectorAll('.carousel-item');
+                        // Показуємо стрілки тільки якщо карток більше однієї
+                        if (carouselItems.length > 1) {
+                            prevButton.style.opacity = '1';
+                            nextButton.style.opacity = '1';
                         }
-                        formattedValue += value[i];
+                    });
+                
+                    carouselElement.addEventListener('mouseleave', function() {
+                        prevButton.style.opacity = '0';
+                        nextButton.style.opacity = '0';
+                    });
+                
+                    // Завантажуємо картки користувача
+                    loadUserCards();
+                    
+                    // Функція для завантаження карток користувача з бази даних
+                    function loadUserCards() {
+                        fetch('{% url "get_cards" %}')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    const carouselInner = document.getElementById('carouselItems');
+                                    
+                                    
+                                    carouselInner.innerHTML = '';
+                                    
+                                    // Додаємо картки з бази даних
+                                    if (data.cards.length > 0) {
+                                        data.cards.forEach((card, index) => {
+                                            let cardClass = '';
+                                            if (card.card_type === 'VISA') cardClass = 'visa-card';
+                                            else if (card.card_type === 'MASTERCARD') cardClass = 'mastercard-card';
+                                            else if (card.card_type === 'AMEX') cardClass = 'amex-card';
+                                            
+                                            const newItem = document.createElement('div');
+                                            newItem.className = 'carousel-item';
+                                            if (index === 0) {
+                                                // Робимо першу картку активною
+                                                newItem.classList.add('active');
+                                            }
+                                            
+                                            newItem.innerHTML = `
+                                                <div class="credit-card-display ${cardClass}">
+                                                    <div class="credit-card-front">
+                                                        <div class="chip"></div>
+                                                        <div class="card-number-display">${card.card_number}</div>
+                                                        <div class="card-details">
+                                                            <div class="card-holder-name">${card.card_holder}</div>
+                                                            <div class="expiry-date">${card.expiry_date}</div>
+                                                        </div>
+                                                        <div class="card-type-logo">${card.card_type}</div>
+                                                    </div>
+                                                </div>
+                                            `;
+                                            
+                                            carouselInner.appendChild(newItem);
+                                        });
+                                    } else {
+                                        // Якщо немає збережених карток, додаємо тестову картку
+                                        const defaultItem = document.createElement('div');
+                                        defaultItem.className = 'carousel-item active';
+                                        defaultItem.innerHTML = `
+                                            <div class="credit-card-display">
+                                                <div class="credit-card-front">
+                                                    <div class="chip"></div>
+                                                    <div class="card-number-display">4111 1111 1111 1111</div>
+                                                    <div class="card-details">
+                                                        <div class="card-holder-name">TestCards</div>
+                                                        <div class="expiry-date">12/26</div>
+                                                    </div>
+                                                    <div class="card-type-logo">VISA</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                        carouselInner.appendChild(defaultItem);
+                                    }
+                                    
+                                    // Оновлюємо стан стрілок в залежності від кількості карток
+                                    updateArrowVisibility();
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Помилка завантаження карток:', error);
+                            });
                     }
                     
-                    e.target.value = formattedValue;
-                    updateCardPreview();
-                });
-            
-                // Форматування введення терміну дії картки
-                cardExpiryInput.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    
-                    if (value.length > 2) {
-                        e.target.value = value.substring(0, 2) + '/' + value.substring(2);
-                    } else {
-                        e.target.value = value;
+                    // Функція для оновлення видимості стрілок в залежності від кількості карток
+                    function updateArrowVisibility() {
+                        const carouselItems = document.querySelectorAll('.carousel-item');
+                        
+                        if (carouselItems.length <= 1) {
+                            // Ховаємо стрілки, якщо тільки одна картка
+                            prevButton.style.display = 'none';
+                            nextButton.style.display = 'none';
+                        } else {
+                            // Показуємо стрілки, але з нульовою прозорістю (видимі при наведенні)
+                            prevButton.style.display = 'block';
+                            nextButton.style.display = 'block';
+                        }
                     }
-                    updateCardPreview();
-                });
-            
-                // Оновлення CVV коду
-                cardCvvInput.addEventListener('input', function() {
-                    updateCardPreview();
-                });
-            
-                // Оновлення імені власника
-                cardHolderInput.addEventListener('input', function() {
-                    updateCardPreview();
-                });
-            
-                // Функція оновлення попереднього перегляду картки
-                function updateCardPreview() {
-                    const previewCardNumber = document.getElementById('previewCardNumber');
-                    const previewCardHolder = document.getElementById('previewCardHolder');
-                    const previewCardExpiry = document.getElementById('previewCardExpiry');
-                    const previewCardCvv = document.getElementById('previewCardCvv');
-                    const previewCardType = document.getElementById('previewCardType');
-                    
-                    // Ідентифікація типу картки по першим цифрам
-                    const cardNumber = cardNumberInput.value.replace(/\s/g, '');
-                    let cardType = 'BANK';
-                    
-                    if (cardNumber.startsWith('4')) {
-                        cardType = 'VISA';
-                        document.querySelector('.preview-card').classList.add('visa-card');
-                        document.querySelector('.preview-card').classList.remove('mastercard-card', 'amex-card');
-                    } else if (/^5[1-5]/.test(cardNumber)) {
-                        cardType = 'MASTERCARD';
-                        document.querySelector('.preview-card').classList.add('mastercard-card');
-                        document.querySelector('.preview-card').classList.remove('visa-card', 'amex-card');
-                    } else if (/^3[47]/.test(cardNumber)) {
-                        cardType = 'AMEX';
-                        document.querySelector('.preview-card').classList.add('amex-card');
-                        document.querySelector('.preview-card').classList.remove('visa-card', 'mastercard-card');
+                
+                    // Відкриваємо модальне вікно для додавання картки
+                    addCardBtn.addEventListener('click', function() {
+                        modal.show();
+                    });
+                
+                    // Форматування введення номера картки з пробілами
+                    cardNumberInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        let formattedValue = '';
+                        
+                        for (let i = 0; i < value.length; i++) {
+                            if (i > 0 && i % 4 === 0) {
+                                formattedValue += ' ';
+                            }
+                            formattedValue += value[i];
+                        }
+                        
+                        e.target.value = formattedValue;
+                        updateCardPreview();
+                    });
+                
+                    // Форматування введення терміну дії картки
+                    cardExpiryInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        
+                        if (value.length > 2) {
+                            e.target.value = value.substring(0, 2) + '/' + value.substring(2);
+                        } else {
+                            e.target.value = value;
+                        }
+                        updateCardPreview();
+                    });
+                
+                    // Обмеження введення CVV до 3 цифр
+                    cardCvvInput.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        e.target.value = value.substring(0, 3);
+                        updateCardPreview();
+                    });
+                
+                    // Оновлення імені власника
+                    cardHolderInput.addEventListener('input', function() {
+                        updateCardPreview();
+                    });
+                
+                    // Функція оновлення попереднього перегляду картки
+                    function updateCardPreview() {
+                        const previewCardNumber = document.getElementById('previewCardNumber');
+                        const previewCardHolder = document.getElementById('previewCardHolder');
+                        const previewCardExpiry = document.getElementById('previewCardExpiry');
+                        const previewCardCvv = document.getElementById('previewCardCvv');
+                        const previewCardType = document.getElementById('previewCardType');
+                        
+                        // Ідентифікація типу картки по першим цифрам
+                        const cardNumber = cardNumberInput.value.replace(/\s/g, '');
+                        let cardType = 'BANK';
+                        
+                        if (cardNumber.startsWith('4')) {
+                            cardType = 'VISA';
+                            document.querySelector('.preview-card').classList.add('visa-card');
+                            document.querySelector('.preview-card').classList.remove('mastercard-card', 'amex-card');
+                        } else if (/^5[1-5]/.test(cardNumber)) {
+                            cardType = 'MASTERCARD';
+                            document.querySelector('.preview-card').classList.add('mastercard-card');
+                            document.querySelector('.preview-card').classList.remove('visa-card', 'amex-card');
+                        } else if (/^3[47]/.test(cardNumber)) {
+                            cardType = 'AMEX';
+                            document.querySelector('.preview-card').classList.add('amex-card');
+                            document.querySelector('.preview-card').classList.remove('visa-card', 'mastercard-card');
+                        }
+                        
+                        previewCardNumber.textContent = cardNumberInput.value || '•••• •••• •••• ••••';
+                        previewCardHolder.textContent = cardHolderInput.value || 'ІМ\'Я ВЛАСНИКА';
+                        previewCardExpiry.textContent = cardExpiryInput.value || 'MM/РР';
+                        previewCardCvv.textContent = cardCvvInput.value || '•••';
+                        previewCardType.textContent = cardType;
                     }
-                    
-                    previewCardNumber.textContent = cardNumberInput.value || '•••• •••• •••• ••••';
-                    previewCardHolder.textContent = cardHolderInput.value || 'ІМ\'Я ВЛАСНИКА';
-                    previewCardExpiry.textContent = cardExpiryInput.value || 'MM/РР';
-                    previewCardCvv.textContent = cardCvvInput.value || '•••';
-                    previewCardType.textContent = cardType;
-                }
-            
-                // Обробка натискання кнопки "Зберегти картку"
-                document.getElementById('processPayment').addEventListener('click', function() {
-                    const cardNumber = cardNumberInput.value;
-                    const cardHolder = cardHolderInput.value;
-                    const cardExpiry = cardExpiryInput.value;
-                    const cardCvv = cardCvvInput.value;
-                    
-                    // Визначення типу картки
-                    let cardType = 'BANK';
-                    let cardClass = '';
-                    
-                    if (cardNumber.startsWith('4')) {
-                        cardType = 'VISA';
-                        cardClass = 'visa-card';
-                    } else if (/^5[1-5]/.test(cardNumber.replace(/\s/g, ''))) {
-                        cardType = 'MASTERCARD';
-                        cardClass = 'mastercard-card';
-                    } else if (/^3[47]/.test(cardNumber.replace(/\s/g, ''))) {
-                        cardType = 'AMEX';
-                        cardClass = 'amex-card';
-                    }
-            
-                    // Додавання картки до каруселі
-                    const carouselInner = document.getElementById('carouselItems');
-                    const newItem = document.createElement('div');
-                    newItem.className = 'carousel-item';
-                    
-                    newItem.innerHTML = `
-                        <div class="credit-card-display ${cardClass}">
-                            <div class="credit-card-front">
-                                <div class="chip"></div>
-                                <div class="card-number-display">${cardNumber || '•••• •••• •••• ••••'}</div>
-                                <div class="card-details">
-                                    <div class="card-holder-name">${cardHolder || 'ІМ\'Я ВЛАСНИКА'}</div>
-                                    <div class="expiry-date">${cardExpiry || 'MM/РР'}</div>
-                                </div>
-                                <div class="card-type-logo">${cardType}</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    carouselInner.appendChild(newItem);
-                    
-                    // Змінюємо активну картку на нову
-                    const activeItems = carouselInner.querySelectorAll('.active');
-                    activeItems.forEach(item => item.classList.remove('active'));
-                    newItem.classList.add('active');
-            
-                    // Очищуємо форму
-                    cardNumberInput.value = '';
-                    cardHolderInput.value = '';
-                    cardExpiryInput.value = '';
-                    cardCvvInput.value = '';
-                    updateCardPreview();
-            
-                    // Закриття модального вікна
-                    modal.hide();
+                
+                    // Обробка натискання кнопки "Зберегти картку"
+                    document.getElementById('processPayment').addEventListener('click', function() {
+                        const cardNumber = cardNumberInput.value;
+                        const cardHolder = cardHolderInput.value;
+                        const cardExpiry = cardExpiryInput.value;
+                        const cardCvv = cardCvvInput.value;
+                        
+                        // Валідація полів
+                        if (!cardNumber || !cardHolder || !cardExpiry || !cardCvv) {
+                            alert('Будь ласка, заповніть усі поля');
+                            return;
+                        }
+                        
+                        // Визначення типу картки
+                        let cardType = 'BANK';
+                        
+                        if (cardNumber.startsWith('4')) {
+                            cardType = 'VISA';
+                        } else if (/^5[1-5]/.test(cardNumber.replace(/\s/g, ''))) {
+                            cardType = 'MASTERCARD';
+                        } else if (/^3[47]/.test(cardNumber.replace(/\s/g, ''))) {
+                            cardType = 'AMEX';
+                        }
+                        
+                        // Отримуємо CSRF токен
+                        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        
+                        // Відправляємо дані на сервер
+                        fetch('{% url "save_card" %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify({
+                                cardNumber: cardNumber,
+                                cardHolder: cardHolder,
+                                cardExpiry: cardExpiry,
+                                cardCvv: cardCvv,
+                                cardType: cardType
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                // Очищуємо форму
+                                cardNumberInput.value = '';
+                                cardHolderInput.value = '';
+                                cardExpiryInput.value = '';
+                                cardCvvInput.value = '';
+                                updateCardPreview();
+                                
+                                // Оновлюємо картки користувача
+                                loadUserCards();
+                                
+                                // Закриття модального вікна
+                                modal.hide();
+                            } else {
+                                alert('Помилка збереження картки: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Помилка:', error);
+                            alert('Помилка під час збереження картки!');
+                        });
+                    });
                 });
-            });
-            </script>
+                </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
