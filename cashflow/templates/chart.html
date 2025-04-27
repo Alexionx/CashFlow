@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body class="bg-light">
+<body class="">
 
 {% include 'partials/header.html' %}
 
@@ -64,6 +64,9 @@
     </div>
   </div>
 </div>
+
+<!-- Include footer -->
+{% include 'partials/footer.html' %}
 
 <script>
   let reportChart;
