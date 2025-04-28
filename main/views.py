@@ -212,6 +212,17 @@ def add_expense(request):
     return render(request, 'createPlan.html', {'expenses': expenses})
 
 @login_required
+def delete_expense(request, expense_id):
+    if request.method == 'POST':
+        try:
+            expense = Expense.objects.get(id=expense_id, user=request.user)
+            expense.delete()
+            return JsonResponse({'status': 'success', 'message': 'Витрату видалено!'})
+        except Expense.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Витрата не знайдена або вам не належить.'})
+    return JsonResponse({'status': 'error', 'message': 'Недійсний метод запиту.'})
+
+@login_required
 def report_api(request):
     user = request.user
     period = request.GET.get('period', 'month')

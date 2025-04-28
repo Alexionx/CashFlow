@@ -24,10 +24,10 @@
         <div class="mb-3">
           <label for="category" class="form-label">Категорія:</label>
           <select class="form-select" id="category" required>
-            <option selected>Харчування</option>
-            <option>Транспорт</option>
-            <option>Розваги</option>
-            <option>Інше</option>
+            <option value="food">Харчування</option>
+            <option value="transport">Транспорт</option>
+            <option value="entertainment">Розваги</option>
+            <option value="other">Інше</option>
           </select>
         </div>
 
@@ -47,14 +47,18 @@
         <th>Категорія</th>
         <th>Сума</th>
         <th>Дата</th>
+        <th>Дії</th>
       </tr>
     </thead>
     <tbody>
       {% for expense in expenses %}
-      <tr>
-        <td>{{ expense.category }}</td>
+      <tr data-expense-id="{{ expense.id }}">
+        <td>{{ expense.get_category_display }}</td>
         <td>{{ expense.amount }} грн</td>
         <td>{{ expense.date }}</td>
+        <td>
+          <button class="btn btn-danger btn-sm delete-expense" data-expense-id="{{ expense.id }}">×</button>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -102,12 +106,17 @@ form.addEventListener('submit', function(event) {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                // Отримуємо назву категорії для відображення
+                const categorySelect = document.getElementById('category');
+                const categoryText = categorySelect.options[categorySelect.selectedIndex].text;
+
                 // Створюємо новий рядок для таблиці
                 const tr = document.createElement('tr');
+                tr.setAttribute('data-expense-id', data.expense_id);
 
                 // Додаємо категорію
                 const tdCategory = document.createElement('td');
-                tdCategory.textContent = category;
+                tdCategory.textContent = categoryText;
                 tr.appendChild(tdCategory);
 
                 // Додаємо суму витрат
@@ -120,8 +129,17 @@ form.addEventListener('submit', function(event) {
                 tdDate.textContent = date;
                 tr.appendChild(tdDate);
 
-                // Додаємо рядок до таблиці
-                tableBody.appendChild(tr);
+                // Додаємо кнопку видалення
+                const tdActions = document.createElement('td');
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger btn-sm delete-expense';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.setAttribute('data-expense-id', data.expense_id);
+                tdActions.appendChild(deleteBtn);
+                tr.appendChild(tdActions);
+
+                // Додаємо рядок до таблиці (на початок)
+                tableBody.insertBefore(tr, tableBody.firstChild);
 
                 // Очищаємо форму після додавання витрати
                 form.reset();
@@ -137,13 +155,40 @@ form.addEventListener('submit', function(event) {
     }
 });
 
+// Додаємо обробник події для видалення витрат
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('delete-expense')) {
+        const expenseId = event.target.getAttribute('data-expense-id');
+        const row = event.target.closest('tr');
+        
+        // Отримуємо CSRF токен
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-
-
+        // Надсилаємо запит на видалення
+        fetch(`/delete_expense/${expenseId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Видаляємо рядок з таблиці
+                row.remove();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('Сталася помилка при видаленні витрати.');
+        });
+    }
+});
 </script>
 
 <script src="https://unpkg.com/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
-
 </html>

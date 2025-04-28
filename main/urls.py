@@ -22,6 +22,7 @@ urlpatterns = [
     path('save-card/', views.save_card, name='save_card'),
     path('get-cards/', views.get_user_cards, name='get_cards'),
     path('upload_avatar/', views.upload_avatar, name='upload_avatar'),
+    path('delete_expense/<int:expense_id>/', views.delete_expense, name='delete_expense'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
